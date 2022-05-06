@@ -35,7 +35,7 @@ class ReviewDiscussionView extends StatelessWidget {
   Widget build(BuildContext context) {
     var textTheme = Theme.of(context).textTheme;
     return DiscussionBaseView(
-        fileRow: Row(children: [
+        fileRow: discussion.file == null ? null : Row(children: [
           FileType(filename: discussion.file!.fileName),
           const Padding(padding: EdgeInsets.all(2)),
           GestureDetector(
@@ -146,10 +146,10 @@ class TextShimmer extends StatelessWidget {
 }
 
 class DiscussionBaseView extends StatelessWidget {
-  final Widget fileRow;
+  final Widget? fileRow;
   final List<Widget> comments;
 
-  const DiscussionBaseView({required this.fileRow, required this.comments, Key? key})
+  const DiscussionBaseView({this.fileRow, required this.comments, Key? key})
       : super(key: key);
 
   @override
@@ -158,7 +158,7 @@ class DiscussionBaseView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          fileRow,
+          if (fileRow != null) fileRow!,
           comments[0],
           ...comments.skip(1).map((comment) => Padding(
                 padding: const EdgeInsets.only(left: 24.0),
