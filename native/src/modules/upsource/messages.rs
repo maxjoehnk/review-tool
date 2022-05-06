@@ -304,6 +304,7 @@ pub struct ReactionDTO {
     /// ID of the reaction
     pub id: String,
     /// List of Upsource user IDs
+    #[serde(default)]
     pub user_ids: Vec<String>,
 }
 
