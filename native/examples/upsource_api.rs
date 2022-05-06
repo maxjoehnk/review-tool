@@ -11,22 +11,22 @@ fn main() -> anyhow::Result<()> {
             token: std::env::var("UPSOURCE_TOKEN").unwrap(),
         })
         .into(),
-    }]);
+    }])?;
 
-    let reviews = api::get_reviews(id.clone());
+    let reviews = api::get_reviews(id.clone())?;
     println!("{reviews:?}");
 
     let mut reviews = reviews.into_iter();
     while let Some(review) = reviews.next() {
-        let discussions = api::get_review_discussions(id.clone(), review.id.clone());
+        let discussions = api::get_review_discussions(id.clone(), review.id.clone())?;
         println!("{discussions:?}");
 
-        let summaries = api::get_review_file_summaries(id.clone(), review.id.clone());
+        let summaries = api::get_review_file_summaries(id.clone(), review.id.clone())?;
         println!("{summaries:?}");
 
         if let Some(file) = summaries.into_iter().next() {
             let file =
-                api::get_review_file(id.clone(), review.id, file.file_path, file.revision_id);
+                api::get_review_file(id.clone(), review.id, file.file_path, file.revision_id)?;
             println!("{:?}", file)
         }
     }
