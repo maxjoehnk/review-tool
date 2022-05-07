@@ -4,104 +4,92 @@ use std::str::FromStr;
 use async_compat::CompatExt;
 use itertools::Itertools;
 use octorust::auth::Credentials;
-use octorust::types::{
-    IssueSearchResultItem, Order, PrivateUser, PublicUser, PullRequestReviewComment,
-    SearchIssuesPullRequestsSort, Sort,
-};
+use octorust::types::{Order, PrivateUser, PublicUser, PullRequestReviewComment, Sort};
 use octorust::Client;
 
 use crate::models::*;
 use crate::util::split_file_name;
 use crate::ReviewModule;
 
+mod graphql;
+
 pub struct GithubModule {
     client: Client,
+    graphql_client: graphql::GraphqlClient,
     query: String,
 }
 
 impl GithubModule {
     pub fn new(token: String, query: String) -> anyhow::Result<Self> {
+        let graphql_client = graphql::GraphqlClient::new(&token)?;
         let client = Client::new("review-tool", Credentials::Token(token))?;
 
-        Ok(Self { client, query })
+        Ok(Self {
+            client,
+            graphql_client,
+            query,
+        })
     }
 
     async fn get_reviews(&self) -> anyhow::Result<Vec<Review>> {
-        let res = self
-            .client
-            .search()
-            .issues_and_pull_requests(
-                &self.query,
-                SearchIssuesPullRequestsSort::Created,
-                Order::Desc,
-                20,
-                0,
-            )
-            .await?;
+        use self::graphql::queries::get_reviews::*;
+        let prs = self.graphql_client.get_reviews(self.query.clone()).await?;
 
-        let prs = res
-            .items
-            .into_iter()
-            .filter(|item| item.pull_request.is_some())
-            .map(|item| self.get_review(item))
-            .collect::<Vec<_>>();
-
-        futures::future::try_join_all(prs).await
-    }
-
-    async fn get_review(&self, item: IssueSearchResultItem) -> anyhow::Result<Review> {
-        let repository_url = item
-            .repository_url
-            .as_ref()
-            .and_then(|url| url.path_segments())
-            .unwrap();
-        let paths = repository_url.skip(1).collect::<Vec<_>>();
-        let pr = self
-            .client
-            .pulls()
-            .get(paths[0], paths[1], item.number)
-            .await?;
-        let reviews = self
-            .client
-            .pulls()
-            .list_all_reviews(paths[0], paths[1], item.number)
-            .await?;
-
-        let user_ids = reviews
+        let user_ids = prs
             .iter()
-            .filter_map(|review| review.user.clone())
-            .chain(item.user.into_iter())
-            .map(|user| user.login);
+            .flat_map(|pr| {
+                pr.reviews
+                    .as_ref()
+                    .and_then(|reviews| reviews.nodes.clone())
+                    .unwrap_or_default()
+                    .into_iter()
+                    .flatten()
+                    .flat_map(|review| review.author.as_ref().map(|user| user.login.clone()))
+                    .chain(pr.author.iter().map(|user| user.login.clone()))
+            })
+            .unique();
 
         let user_cache = self.get_user_info_cache(user_ids).await?;
 
-        Ok(Review {
-            title: item.title,
-            id: ReviewId {
-                id: item.number,
-                owner: paths[0].to_string(),
-                repo: paths[1].to_string(),
-            }
-            .to_string(),
-            open: item.closed_at.is_none(),
-            state: ReviewState::Pending,
-            branch_name: pr.head.ref_,
-            authors: pr
-                .user
-                .into_iter()
-                .map(|user| user_cache.get_user(&user.login))
-                .collect(),
-            reviewers: reviews
-                .into_iter()
-                .map(|review| {
-                    let user = review.user.unwrap();
+        let reviews = prs
+            .into_iter()
+            .map(|pr| {
+                let id = ReviewId {
+                    node_id: pr.id,
+                    id: pr.number,
+                    owner: pr.repository.owner.login,
+                    repo: pr.repository.name,
+                };
+                Review {
+                    id: id.to_string(),
+                    title: pr.title,
+                    state: match pr.review_decision {
+                        Some(PullRequestReviewDecision::APPROVED) => ReviewState::Approved,
+                        Some(PullRequestReviewDecision::CHANGES_REQUESTED) => ReviewState::Rejected,
+                        _ => ReviewState::Pending,
+                    },
+                    open: pr.closed_at.is_none(),
+                    branch_name: pr.base_ref.unwrap().name,
+                    reviewers: pr
+                        .reviews
+                        .and_then(|reviews| reviews.nodes)
+                        .unwrap_or_default()
+                        .into_iter()
+                        .flatten()
+                        .flat_map(|review| review.author)
+                        .unique_by(|review| review.login.clone())
+                        .map(|user| user_cache.get_user(&user.login))
+                        .collect(),
+                    authors: pr
+                        .author
+                        .into_iter()
+                        .map(|user| user_cache.get_user(&user.login))
+                        .collect(),
+                }
+            })
+            .collect();
 
-                    user_cache.get_user(&user.login)
-                })
-                .sorted_by_key(|user| user.name.clone())
-                .dedup_by(|lhs, rhs| lhs.name == rhs.name)
-                .collect(),
-        })
+        Ok(reviews)
     }
 
     async fn get_review_discussions(
@@ -183,16 +171,27 @@ impl GithubModule {
         &self,
         review_id: ReviewId,
     ) -> anyhow::Result<Vec<ReviewFileSummary>> {
-        let files = self
-            .client
-            .pulls()
-            .list_files(&review_id.owner, &review_id.repo, review_id.id, 100, 1)
-            .await?;
+        let pulls = self.client.pulls();
+        let files = pulls.list_files(&review_id.owner, &review_id.repo, review_id.id, 100, 1);
+        let gql_files = self.graphql_client.get_review_file_summaries(
+            review_id.owner.clone(),
+            review_id.repo.clone(),
+            review_id.id.clone(),
+        );
+        let (files, gql_files) = futures::future::try_join(files, gql_files).await?;
 
         let files = files
             .into_iter()
             .map(|file| {
                 let (file_path_segments, file_name) = split_file_name(&file.filename);
+                let is_read = gql_files
+                    .iter()
+                    .find(|gql_file| &gql_file.path == &file.filename)
+                    .map(|file| {
+                        file.viewer_viewed_state
+                            == graphql::queries::get_review_file_summaries::FileViewedState::VIEWED
+                    })
+                    .unwrap_or_default();
                 ReviewFileSummary {
                     file_name,
                     file_path: file.filename,
@@ -206,7 +205,7 @@ impl GithubModule {
                     },
                     added_lines: file.additions as u32,
                     removed_lines: file.deletions as u32,
-                    is_read: false,
+                    is_read,
                     revision_id: file
                         .contents_url
                         .clone()
@@ -289,6 +288,20 @@ impl GithubModule {
             })
         }
     }
+
+    async fn mark_file_read(
+        &self,
+        review_id: ReviewId,
+        file_path: String,
+        _revision: String,
+        read: bool,
+    ) -> anyhow::Result<()> {
+        self.graphql_client
+            .mark_file_viewed_state(review_id.node_id, file_path, read)
+            .await?;
+
+        Ok(())
+    }
 }
 
 impl ReviewModule for GithubModule {
@@ -321,13 +334,12 @@ impl ReviewModule for GithubModule {
 
     fn mark_file_read(
         &self,
-        _review_id: String,
-        _file_path: String,
-        _revision: String,
-        _read: bool,
+        review_id: String,
+        file_path: String,
+        revision: String,
+        read: bool,
     ) -> anyhow::Result<()> {
-        // TODO: is there actually an api for this?
-        Ok(())
+        smol::block_on(self.mark_file_read(review_id.parse()?, file_path, revision, read))
     }
 }
 
@@ -362,6 +374,7 @@ struct ReviewId {
     owner: String,
     repo: String,
     id: i64,
+    node_id: String,
 }
 
 impl FromStr for ReviewId {
@@ -369,18 +382,19 @@ impl FromStr for ReviewId {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let result = s.split('/').collect::<Vec<_>>();
-        anyhow::ensure!(result.len() == 3, "Invalid review id format");
+        anyhow::ensure!(result.len() == 4, "Invalid review id format");
 
         Ok(ReviewId {
             owner: result[0].to_string(),
             repo: result[1].to_string(),
             id: result[2].parse()?,
+            node_id: result[3].parse()?,
         })
     }
 }
 
 impl ToString for ReviewId {
     fn to_string(&self) -> String {
-        format!("{}/{}/{}", self.owner, self.repo, self.id)
+        format!("{}/{}/{}/{}", self.owner, self.repo, self.id, self.node_id)
     }
 }

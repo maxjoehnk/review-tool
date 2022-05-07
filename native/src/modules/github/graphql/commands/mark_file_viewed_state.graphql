@@ -1,0 +1,11 @@
+mutation MarkFileAsViewed($pr: ID!, $file: String!) {
+  markFileAsViewed(input: { path: $file, pullRequestId: $pr }) {
+    clientMutationId
+  }
+}
+
+mutation MarkFileAsUnviewed($pr: ID!, $file: String!) {
+  unmarkFileAsViewed(input: { path: $file, pullRequestId: $pr }) {
+    clientMutationId
+  }
+}

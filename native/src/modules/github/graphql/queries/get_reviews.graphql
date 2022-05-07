@@ -1,0 +1,40 @@
+query GetReviews($query: String!) {
+  search(query: $query, type: ISSUE, first: 50) {
+    nodes {
+      __typename
+      ... on PullRequest {
+        id
+        number
+        title
+        closedAt
+        reviewDecision
+        baseRef {
+          name
+        }
+        author {
+          __typename
+          avatarUrl(size: 120)
+          login
+        }
+        repository {
+          url
+          owner {
+            __typename
+            login
+          }
+          name
+        }
+        reviews(first: 50, states: [APPROVED, CHANGES_REQUESTED, DISMISSED, PENDING]) {
+          nodes {
+            id
+            author {
+              __typename
+              avatarUrl(size: 120)
+              login
+            }
+          }
+        }
+      }
+    }
+  }
+}
