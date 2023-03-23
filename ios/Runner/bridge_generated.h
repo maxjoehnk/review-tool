@@ -1,6 +1,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+typedef struct _Dart_Handle* Dart_Handle;
+
+typedef struct DartCObject DartCObject;
+
+typedef int64_t DartPort;
+
+typedef bool (*DartPostCObjectFnType)(DartPort port_id, void *message);
 
 typedef struct wire_uint_8_list {
   uint8_t *ptr;
@@ -12,22 +19,22 @@ typedef struct wire_UpsourceProviderSettings {
   struct wire_uint_8_list *token;
 } wire_UpsourceProviderSettings;
 
-typedef struct ProviderModule_Upsource {
+typedef struct wire_ProviderModule_Upsource {
   struct wire_UpsourceProviderSettings *field0;
-} ProviderModule_Upsource;
+} wire_ProviderModule_Upsource;
 
 typedef struct wire_GithubProviderSettings {
   struct wire_uint_8_list *token;
   struct wire_uint_8_list *query;
 } wire_GithubProviderSettings;
 
-typedef struct ProviderModule_Github {
+typedef struct wire_ProviderModule_Github {
   struct wire_GithubProviderSettings *field0;
-} ProviderModule_Github;
+} wire_ProviderModule_Github;
 
 typedef union ProviderModuleKind {
-  struct ProviderModule_Upsource *Upsource;
-  struct ProviderModule_Github *Github;
+  struct wire_ProviderModule_Upsource *Upsource;
+  struct wire_ProviderModule_Github *Github;
 } ProviderModuleKind;
 
 typedef struct wire_ProviderModule {
@@ -46,15 +53,17 @@ typedef struct wire_list_provider_settings {
   int32_t len;
 } wire_list_provider_settings;
 
-typedef struct WireSyncReturnStruct {
-  uint8_t *ptr;
-  int32_t len;
-  bool success;
-} WireSyncReturnStruct;
+typedef struct DartCObject *WireSyncReturn;
 
-typedef int64_t DartPort;
+void store_dart_post_cobject(DartPostCObjectFnType ptr);
 
-typedef bool (*DartPostCObjectFnType)(DartPort port_id, void *message);
+Dart_Handle get_dart_object(uintptr_t ptr);
+
+void drop_dart_object(uintptr_t ptr);
+
+uintptr_t new_dart_opaque(Dart_Handle handle);
+
+intptr_t init_frb_dart_api_dl(void *obj);
 
 void wire_get_reviews(int64_t port_, struct wire_uint_8_list *provider_id);
 
@@ -81,23 +90,21 @@ void wire_mark_file_read(int64_t port_,
 
 void wire_configure_modules(int64_t port_, struct wire_list_provider_settings *modules);
 
-struct wire_GithubProviderSettings *new_box_autoadd_github_provider_settings(void);
+struct wire_GithubProviderSettings *new_box_autoadd_github_provider_settings_0(void);
 
-struct wire_UpsourceProviderSettings *new_box_autoadd_upsource_provider_settings(void);
+struct wire_UpsourceProviderSettings *new_box_autoadd_upsource_provider_settings_0(void);
 
-struct wire_ProviderModule *new_box_provider_module(void);
+struct wire_ProviderModule *new_box_provider_module_0(void);
 
-struct wire_list_provider_settings *new_list_provider_settings(int32_t len);
+struct wire_list_provider_settings *new_list_provider_settings_0(int32_t len);
 
-struct wire_uint_8_list *new_uint_8_list(int32_t len);
+struct wire_uint_8_list *new_uint_8_list_0(int32_t len);
 
 union ProviderModuleKind *inflate_ProviderModule_Upsource(void);
 
 union ProviderModuleKind *inflate_ProviderModule_Github(void);
 
-void free_WireSyncReturnStruct(struct WireSyncReturnStruct val);
-
-void store_dart_post_cobject(DartPostCObjectFnType ptr);
+void free_WireSyncReturn(WireSyncReturn ptr);
 
 static int64_t dummy_method_to_enforce_bundling(void) {
     int64_t dummy_var = 0;
@@ -107,14 +114,17 @@ static int64_t dummy_method_to_enforce_bundling(void) {
     dummy_var ^= ((int64_t) (void*) wire_get_review_file);
     dummy_var ^= ((int64_t) (void*) wire_mark_file_read);
     dummy_var ^= ((int64_t) (void*) wire_configure_modules);
-    dummy_var ^= ((int64_t) (void*) new_box_autoadd_github_provider_settings);
-    dummy_var ^= ((int64_t) (void*) new_box_autoadd_upsource_provider_settings);
-    dummy_var ^= ((int64_t) (void*) new_box_provider_module);
-    dummy_var ^= ((int64_t) (void*) new_list_provider_settings);
-    dummy_var ^= ((int64_t) (void*) new_uint_8_list);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_github_provider_settings_0);
+    dummy_var ^= ((int64_t) (void*) new_box_autoadd_upsource_provider_settings_0);
+    dummy_var ^= ((int64_t) (void*) new_box_provider_module_0);
+    dummy_var ^= ((int64_t) (void*) new_list_provider_settings_0);
+    dummy_var ^= ((int64_t) (void*) new_uint_8_list_0);
     dummy_var ^= ((int64_t) (void*) inflate_ProviderModule_Upsource);
     dummy_var ^= ((int64_t) (void*) inflate_ProviderModule_Github);
-    dummy_var ^= ((int64_t) (void*) free_WireSyncReturnStruct);
+    dummy_var ^= ((int64_t) (void*) free_WireSyncReturn);
     dummy_var ^= ((int64_t) (void*) store_dart_post_cobject);
+    dummy_var ^= ((int64_t) (void*) get_dart_object);
+    dummy_var ^= ((int64_t) (void*) drop_dart_object);
+    dummy_var ^= ((int64_t) (void*) new_dart_opaque);
     return dummy_var;
 }

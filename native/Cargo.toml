@@ -8,8 +8,8 @@ name = "native"
 crate-type = ["rlib", "cdylib", "staticlib"]
 
 [dependencies]
-anyhow = { version = "1.0.56", features = ["backtrace"] }
-flutter_rust_bridge = "1.22.2"
+anyhow = { version = "1", features = ["backtrace"] }
+flutter_rust_bridge = "1.72"
 octorust = { git = "https://github.com/maxjoehnk/third-party-api-clients.git", branch = "feature/run-on-stable" }
 async-compat = "0.2"
 surf = "2.3"

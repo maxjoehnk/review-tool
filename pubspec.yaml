@@ -10,28 +10,30 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_rust_bridge: ^1.22.2
-  freezed_annotation: ^1.1.0
-  bloc: ^8.0.3
-  flutter_bloc: ^8.0.1
-  hydrated_bloc: ^8.1.0
-  cached_network_image: ^3.2.0
-  timeago: ^3.2.2
+  flutter_rust_bridge: ^1.72.0
+  freezed_annotation: ^2.2.0
+  bloc: ^8.1.1
+  flutter_bloc: ^8.1.2
+  hydrated_bloc: ^9.1.0
+  cached_network_image: ^3.2.3
+  timeago: ^3.4.0
   dev_icons: ^1.0.0
-  flutter_markdown: ^0.6.9
-  shared_preferences: ^2.0.13
-  collection: ^1.15.0
+  flutter_markdown: ^0.6.14
+  shared_preferences: ^2.0.20
+  collection: ^1.17.0
   flutter_highlight: ^0.7.0
   shimmer: ^2.0.0
   settings_ui: ^2.0.2
-  uuid: ^3.0.6
+  uuid: ^3.0.7
+  ffi: ^2.0.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^1.0.0
-  build_runner: ^2.1.7
-  freezed: ^1.1.1
+  flutter_lints: ^2.0.1
+  build_runner: ^2.3.0
+  freezed: ^2.3.2
+  ffigen: 7.2.7
 
 flutter:
   uses-material-design: true
