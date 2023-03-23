@@ -10,19 +10,19 @@ crate-type = ["rlib", "cdylib", "staticlib"]
 [dependencies]
 anyhow = { version = "1", features = ["backtrace"] }
 flutter_rust_bridge = "1.72"
-octorust = { git = "https://github.com/maxjoehnk/third-party-api-clients.git", branch = "feature/run-on-stable" }
+octorust = "0.3"
 async-compat = "0.2"
 surf = "2.3"
 serde = { version = "1", features = ["derive"] }
 serde_repr = "0.1"
-smol = "1.2.5"
+smol = "1.3"
 itertools = "0.10"
 lazy_static = "1.4"
 futures = "0.3"
 parking_lot = "0.12"
 enum_dispatch = "0.3"
-base64 = "0.13"
-graphql_client = "0.10"
+base64 = "0.21"
+graphql_client = "0.12"
 env_logger = "0.10"
 url = "2.3"
 gitlab = "0.1509"

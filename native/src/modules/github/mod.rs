@@ -2,10 +2,12 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 use async_compat::CompatExt;
+use base64::prelude::*;
 use itertools::Itertools;
 use octorust::auth::Credentials;
 use octorust::types::{Order, PrivateUser, PublicUser, PullRequestReviewComment, Sort};
 use octorust::Client;
+use url::Url;
 
 use crate::models::*;
 use crate::util::split_file_name;
@@ -206,9 +208,7 @@ impl GithubModule {
                     added_lines: file.additions as u32,
                     removed_lines: file.deletions as u32,
                     is_read,
-                    revision_id: file
-                        .contents_url
-                        .clone()
+                    revision_id: Url::parse(&file.contents_url)
                         .unwrap()
                         .query_pairs()
                         .find(|(key, _)| key == "ref")
@@ -265,7 +265,7 @@ impl GithubModule {
                 .content
                 .split('\n')
                 .map(|part| {
-                    let decoded = base64::decode(part)?;
+                    let decoded = BASE64_STANDARD.decode(part)?;
 
                     Ok(decoded)
                 })
@@ -347,7 +347,7 @@ impl From<&PrivateUser> for User {
     fn from(user: &PrivateUser) -> Self {
         Self {
             name: user.name.clone(),
-            avatar_url: user.avatar_url.clone().map(|user| user.to_string()),
+            avatar_url: Some(user.avatar_url.clone()),
         }
     }
 }
@@ -356,7 +356,7 @@ impl From<&PublicUser> for User {
     fn from(user: &PublicUser) -> Self {
         Self {
             name: user.name.clone(),
-            avatar_url: user.avatar_url.clone().map(|user| user.to_string()),
+            avatar_url: Some(user.avatar_url.clone()),
         }
     }
 }
