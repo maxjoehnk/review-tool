@@ -23,8 +23,10 @@ class Settings {
 
   Future<void> addProvider(ProviderSettings settings) async {
     var id = const Uuid().v4();
-    var type = settings.module
-        .map(upsource: (_) => ProviderType.upsource, github: (_) => ProviderType.github);
+    var type = settings.module.map(
+        upsource: (_) => ProviderType.upsource,
+        github: (_) => ProviderType.github,
+        gitlab: (_) => ProviderType.gitlab);
     var providers = _prefs.getStringList("providers") ?? [];
     providers.add(id);
     await _prefs.setInt("$id.type", type.index);
@@ -46,6 +48,9 @@ class Settings {
     }, github: (github) async {
       await _prefs.setString("$id.token", github.token);
       await _prefs.setString("$id.query", github.query);
+    }, gitlab: (gitlab) async {
+      await _prefs.setString("$id.url", gitlab.url);
+      await _prefs.setString("$id.token", gitlab.token);
     });
   }
 
@@ -59,15 +64,21 @@ class Settings {
     int typeIndex = _prefs.getInt("$id.type")!;
     String name = _prefs.getString("$id.name")!;
     ProviderType type = ProviderType.values[typeIndex];
-    ProviderModule? module;
+    ProviderModule module;
 
-    if (type == ProviderType.upsource) {
-      module = ProviderModule.upsource(_getUpsourceProvider(id));
-    } else if (type == ProviderType.github) {
-      module = ProviderModule.github(_getGithubProvider(id));
+    switch (type) {
+      case ProviderType.upsource:
+        module = ProviderModule.upsource(_getUpsourceProvider(id));
+        break;
+      case ProviderType.github:
+        module = ProviderModule.github(_getGithubProvider(id));
+        break;
+      case ProviderType.gitlab:
+        module = ProviderModule.gitlab(_getGitlabProvider(id));
+        break;
     }
 
-    return ProviderSettings(id: id, name: name, module: module!);
+    return ProviderSettings(id: id, name: name, module: module);
   }
 
   UpsourceProviderSettings _getUpsourceProvider(String id) {
@@ -87,6 +98,13 @@ class Settings {
     return GithubProviderSettings(token: token, query: query);
   }
 
+  GitlabProviderSettings _getGitlabProvider(String key) {
+    String url = _prefs.getString("$key.url")!;
+    String token = _prefs.getString("$key.token")!;
+
+    return GitlabProviderSettings(token: token, url: url);
+  }
+
   Future<void> _reconfigureProviders() async {
     await api.configureModules(modules: providers);
   }
@@ -95,4 +113,5 @@ class Settings {
 enum ProviderType {
   upsource,
   github,
+  gitlab,
 }

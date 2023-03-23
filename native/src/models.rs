@@ -81,6 +81,7 @@ pub struct ProviderSettings {
 pub enum ProviderModule {
     Upsource(UpsourceProviderSettings),
     Github(GithubProviderSettings),
+    Gitlab(GitlabProviderSettings),
 }
 
 #[derive(Debug, Clone)]
@@ -93,4 +94,10 @@ pub struct UpsourceProviderSettings {
 pub struct GithubProviderSettings {
     pub token: String,
     pub query: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct GitlabProviderSettings {
+    pub url: String,
+    pub token: String,
 }

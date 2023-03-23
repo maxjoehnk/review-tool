@@ -25,7 +25,9 @@ class SettingsOverviewView extends StatelessWidget {
                 trailing: const Icon(Icons.edit),
                 onPressed: (context) => onEditProvider(context, provider),
                 value: Text(provider.module.when(
-                    upsource: (upsource) => upsource.url, github: (github) => github.query)))),
+                    upsource: (upsource) => upsource.url,
+                    github: (github) => github.query,
+                    gitlab: (gitlab) => gitlab.url)))),
             SettingsTile(
               title: const Text("Add Provider", style: TextStyle(color: Colors.white54)),
               onPressed: (context) => onAddProvider(context),

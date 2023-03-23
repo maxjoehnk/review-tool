@@ -52,6 +52,7 @@ class ProviderApi {
 
 extension ProviderSettingsExtension on ProviderSettings {
   String get title {
-    return module.map(upsource: (_) => "Upsource", github: (_) => "Github");
+    return module.map(
+        upsource: (_) => "Upsource", github: (_) => "Github", gitlab: (_) => "Gitlab");
   }
 }

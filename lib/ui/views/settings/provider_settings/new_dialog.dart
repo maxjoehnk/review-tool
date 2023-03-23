@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:review_tool/api.dart';
 
 import 'provider_github.dart';
+import 'provider_gitlab.dart';
 import 'provider_upsource.dart';
 
 class NewProviderDialog extends StatefulWidget {
@@ -41,6 +42,11 @@ class _NewProviderDialogState extends State<NewProviderDialog> {
         onTap: () =>
             _initSettings(ProviderModule.github(GithubProviderSettings(token: "", query: ""))),
       ),
+      ListTile(
+        title: const Text("Gitlab"),
+        onTap: () => _initSettings(
+            ProviderModule.gitlab(GitlabProviderSettings(url: "https://gitlab.com", token: ""))),
+      ),
     ]);
   }
 
@@ -50,6 +56,8 @@ class _NewProviderDialogState extends State<NewProviderDialog> {
           onUpdate: (s) => _updateModule(ProviderModule.upsource(s)), settings: settings),
       github: (settings) => EditGithubSettings(
           onUpdate: (s) => _updateModule(ProviderModule.github(s)), settings: settings),
+      gitlab: (settings) => EditGitlabSettings(
+          onUpdate: (s) => _updateModule(ProviderModule.gitlab(s)), settings: settings),
     );
 
     return Column(mainAxisSize: MainAxisSize.min, children: [

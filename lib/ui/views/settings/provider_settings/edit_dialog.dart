@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:review_tool/api.dart';
+import 'package:review_tool/ui/views/settings/provider_settings/provider_gitlab.dart';
 
 import 'provider_github.dart';
 import 'provider_upsource.dart';
@@ -39,11 +40,12 @@ class _EditProviderDialogState extends State<EditProviderDialog> {
 
   Widget _providerSettings() {
     var providerSettings = _settings.module.when(
-      upsource: (settings) => EditUpsourceSettings(
-          onUpdate: (s) => _updateModule(ProviderModule.upsource(s)), settings: settings),
-      github: (settings) => EditGithubSettings(
-          onUpdate: (s) => _updateModule(ProviderModule.github(s)), settings: settings),
-    );
+        upsource: (settings) => EditUpsourceSettings(
+            onUpdate: (s) => _updateModule(ProviderModule.upsource(s)), settings: settings),
+        github: (settings) => EditGithubSettings(
+            onUpdate: (s) => _updateModule(ProviderModule.github(s)), settings: settings),
+        gitlab: (settings) => EditGitlabSettings(
+            settings: settings, onUpdate: (s) => _updateModule(ProviderModule.gitlab(s))));
 
     return Column(mainAxisSize: MainAxisSize.min, children: [
       TextFormField(

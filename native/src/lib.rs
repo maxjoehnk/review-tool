@@ -1,9 +1,10 @@
 use crate::models::*;
-use crate::modules::{github::GithubModule, upsource::UpsourceModule};
+use crate::modules::{github::GithubModule, upsource::UpsourceModule, gitlab::GitlabModule};
 use enum_dispatch::enum_dispatch;
 use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
+use anyhow::Context;
 
 pub mod api;
 mod bridge_generated;
@@ -28,10 +29,13 @@ impl ApiModules {
             .map(|provider| {
                 let module = match *provider.module {
                     ProviderModule::Github(github) => {
-                        GithubModule::new(github.token, github.query)?.into()
+                        GithubModule::new(github.token, github.query).context("Creating Github module")?.into()
                     }
                     ProviderModule::Upsource(upsource) => {
                         UpsourceModule::new(upsource.url, upsource.token).into()
+                    }
+                    ProviderModule::Gitlab(gitlab) => {
+                        GitlabModule::new(gitlab.url, gitlab.token).context("Creating Gitlab module")?.into()
                     }
                 };
 
@@ -114,6 +118,7 @@ impl ApiModules {
 enum ApiModule {
     UpsourceModule,
     GithubModule,
+    GitlabModule,
 }
 
 #[enum_dispatch(ApiModule)]
