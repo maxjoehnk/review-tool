@@ -9,7 +9,7 @@ crate-type = ["rlib", "cdylib", "staticlib"]
 
 [dependencies]
 anyhow = { version = "1", features = ["backtrace"] }
-flutter_rust_bridge = "1.72"
+flutter_rust_bridge = "1.82"
 octorust = "0.3"
 async-compat = "0.2"
 surf = "2.3"
