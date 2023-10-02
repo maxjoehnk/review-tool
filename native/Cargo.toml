@@ -10,7 +10,7 @@ crate-type = ["rlib", "cdylib", "staticlib"]
 [dependencies]
 anyhow = { version = "1", features = ["backtrace"] }
 flutter_rust_bridge = "1.72"
-octorust = "0.3"
+octorust = "0.7"
 async-compat = "0.2"
 surf = "2.3"
 serde = { version = "1", features = ["derive"] }
