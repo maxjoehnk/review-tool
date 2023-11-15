@@ -1099,7 +1099,7 @@ dependencies = [
  "futures-util",
  "graphql_client 0.11.0",
  "http",
- "itertools",
+ "itertools 0.10.3",
  "log",
  "percent-encoding",
  "reqwest",
@@ -1538,6 +1538,15 @@ name = "itertools"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a9a9d19fa1e79b6215ff29b9d6880b706147f16e9b1dbb1e4e5947b5b02bc5e3"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.12.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "25db6b064527c5d482d0423354fcd07a89a2dfe07b67892e62411946db7f07b0"
 dependencies = [
  "either",
 ]
@@ -2201,7 +2210,7 @@ dependencies = [
  "futures",
  "gitlab",
  "graphql_client 0.12.0",
- "itertools",
+ "itertools 0.12.0",
  "lazy_static",
  "octorust",
  "parking_lot",
